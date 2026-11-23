@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https:; form-action 'none'; base-uri 'self';">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Referrer-Policy" content="no-referrer">
+<title>Dtechmaster — Admin</title>
+
+<!-- ===== FAVICON (idêntico à loja) ===== -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0F2D'/%3E%3Ccircle cx='32' cy='36' r='17' fill='%23ffffff'/%3E%3Cg fill='none' stroke='%2300C4B4' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M32 19 V53'/%3E%3Cpath d='M21 24 Q32 36 21 48'/%3E%3Cpath d='M43 24 Q32 36 43 48'/%3E%3C/g%3E%3Cpath d='M14 16 A22 22 0 0 1 50 16' stroke='%2333E6D2' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0F2D'/%3E%3Ccircle cx='32' cy='36' r='17' fill='%23ffffff'/%3E%3Cg fill='none' stroke='%2300C4B4' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M32 19 V53'/%3E%3Cpath d='M21 24 Q32 36 21 48'/%3E%3Cpath d='M43 24 Q32 36 43 48'/%3E%3C/g%3E%3Cpath d='M14 16 A22 22 0 0 1 50 16' stroke='%2333E6D2' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --neon-cyan:#00F0FF;--cyan-med:#00D4E8;--teal:#00C4B4;
+  --azul-eletrico:#00A8E8;--navy-prof:#0A0F2D;--navy-esc:#05081A;
+  --branco:#FFFFFF;--cinza-tec:#A0B0C8;--cinza-claro:#C8D6E5;
+  --card-bg:#12182e;--sidebar-bg:#0d1225;--input-bg:#1a2040;
+  --danger:#ff4757;--success:#00ff88;--warning:#ffa502;
+  --radius:12px;--radius-sm:8px;
+  --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--navy-esc);color:var(--branco);min-height:100vh;display:flex}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:var(--font);border:none;outline:none}
+input,textarea,select{font-family:var(--font);outline:none}
+
+/* ============================================================
+   CAMADA DE AUTENTICAÇÃO
+   ============================================================ */
+.auth-gate{
+  position:fixed;inset:0;z-index:10000;
+  background:radial-gradient(ellipse at 50% 30%,#0a1430 0%,#05081A 60%,#02040c 100%);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.auth-gate.hidden{display:none}
+.auth-card{
+  width:100%;max-width:440px;background:var(--card-bg);
+  border:1px solid rgba(0,240,255,0.18);border-radius:18px;
+  padding:36px 30px;box-shadow:0 24px 70px rgba(0,0,0,0.6),0 0 40px rgba(0,240,255,0.06);
+  position:relative;overflow:hidden;
+}
+.auth-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--neon-cyan),transparent);
+}
+/* ===== LOGO DTECH MASTER na tela de login ===== */
+.auth-shield{
+  width:96px;height:96px;margin:0 auto 18px;border-radius:50%;
+  background:none;display:flex;align-items:center;justify-content:center;
+  overflow:visible;filter:drop-shadow(0 0 24px rgba(0,240,255,0.35));
+}
+.auth-shield svg,.auth-shield img{width:100%;height:100%;display:block}
+.auth-title{text-align:center;font-size:1.35rem;font-weight:800;margin-bottom:6px}
+.auth-sub{text-align:center;font-size:0.85rem;color:var(--cinza-tec);margin-bottom:26px;line-height:1.5}
+.auth-field{margin-bottom:16px}
+.auth-label{display:block;font-size:0.8rem;font-weight:600;color:var(--cinza-tec);margin-bottom:7px;letter-spacing:0.3px}
+.auth-input{
+  width:100%;padding:12px 14px;border-radius:var(--radius-sm);
+  background:var(--input-bg);border:1px solid rgba(255,255,255,0.1);
+  color:var(--branco);font-size:0.95rem;transition:all .2s;
+}
+.auth-input:focus{border-color:var(--neon-cyan);box-shadow:0 0 0 3px rgba(0,240,255,0.12)}
+.auth-input.error{border-color:var(--danger);box-shadow:0 0 0 3px rgba(255,71,87,0.15)}
+.auth-input::placeholder{color:var(--cinza-tec);opacity:0.5}
+.pin-row{display:flex;gap:8px;justify-content:center}
+.pin-box{
+  width:42px;height:52px;text-align:center;font-size:1.4rem;font-weight:800;
+  background:var(--input-bg);border:1px solid rgba(255,255,255,0.1);
+  border-radius:var(--radius-sm);color:var(--neon-cyan);transition:all .2s;
+}
+.pin-box:focus{border-color:var(--neon-cyan);box-shadow:0 0 0 3px rgba(0,240,255,0.15);transform:scale(1.05)}
+.pin-box.filled{background:rgba(0,240,255,0.08);border-color:rgba(0,240,255,0.4)}
+.auth-btn{
+  width:100%;padding:13px;border-radius:var(--radius-sm);font-weight:800;font-size:0.95rem;
+  background:linear-gradient(135deg,var(--neon-cyan),var(--azul-eletrico));color:var(--navy-esc);
+  transition:all .25s;margin-top:8px;
+}
+.auth-btn:hover{box-shadow:0 0 24px rgba(0,240,255,0.4);transform:translateY(-1px)}
+.auth-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none}
+.auth-msg{font-size:0.82rem;margin-top:14px;text-align:center;min-height:20px;line-height:1.4}
+.auth-msg.err{color:var(--danger)}
+.auth-msg.ok{color:var(--success)}
+.auth-msg.warn{color:var(--warning)}
+.auth-strength{height:4px;border-radius:2px;background:rgba(255,255,255,0.08);margin-top:8px;overflow:hidden}
+.auth-strength-bar{height:100%;width:0;border-radius:2px;transition:all .3s}
+.auth-note{
+  margin-top:22px;padding:12px 14px;border-radius:var(--radius-sm);
+  background:rgba(255,165,2,0.08);border:1px solid rgba(255,165,2,0.25);
+  font-size:0.75rem;color:var(--cinza-tec);line-height:1.55;
+}
+.auth-note strong{color:var(--warning)}
+.lockout{
+  position:absolute;inset:0;background:rgba(5,8,26,0.92);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;flex-direction:column;
+  gap:12px;z-index:5;border-radius:18px;
+}
+.lockout.active{display:flex}
+.lockout-icon{font-size:2.5rem}
+.lockout-title{font-weight:800;color:var(--danger);font-size:1.1rem}
+.lockout-time{font-size:2rem;font-weight:900;color:var(--neon-cyan);font-variant-numeric:tabular-nums}
+.lockout-text{font-size:0.8rem;color:var(--cinza-tec);text-align:center;padding:0 24px}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar{width:260px;min-height:100vh;background:var(--sidebar-bg);border-right:1px solid rgba(0,240,255,0.08);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;transition:transform .3s}
+.sidebar-header{padding:20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,0.05)}
+/* ===== LOGO DTECH MASTER na sidebar ===== */
+.sidebar-logo{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:visible;background:none;box-shadow:none;border:none;flex-shrink:0}
+.sidebar-logo svg,.sidebar-logo img{width:100%;height:100%;display:block}
+.sidebar-brand{font-weight:800;font-size:1rem;color:var(--neon-cyan)}
+.sidebar-version{font-size:0.7rem;color:var(--cinza-tec);opacity:0.6}
+.sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
+.nav-section-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--cinza-tec);opacity:0.5;padding:12px 16px 6px;font-weight:700}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:var(--radius-sm);margin-bottom:2px;color:var(--cinza-tec);font-size:0.9rem;font-weight:500;transition:all .2s;cursor:pointer}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--branco)}
+.nav-item.active{background:rgba(0,240,255,0.1);color:var(--neon-cyan);font-weight:700}
+.nav-item svg{width:18px;height:18px;flex-shrink:0}
+.nav-item .badge-count{margin-left:auto;background:var(--input-bg);color:var(--cinza-tec);font-size:0.7rem;padding:2px 8px;border-radius:10px;font-weight:600}
+.nav-item.active .badge-count{background:rgba(0,240,255,0.2);color:var(--neon-cyan)}
+.sidebar-footer{padding:16px;border-top:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;gap:8px}
+.sidebar-footer button{padding:10px;border-radius:var(--radius-sm);font-size:0.85rem;background:var(--input-bg);color:var(--cinza-tec);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.sidebar-footer button:hover{color:var(--neon-cyan);background:rgba(0,240,255,0.08)}
+.sidebar-footer button.logout-btn{color:var(--danger)}
+.sidebar-footer button.logout-btn:hover{background:rgba(255,71,87,0.1);color:#ff6b7a}
+
+/* MAIN */
+.main{margin-left:260px;flex:1;min-height:100vh}
+.topbar{height:64px;background:var(--navy-prof);border-bottom:1px solid rgba(0,240,255,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-title{font-weight:700;font-size:1.05rem}
+.topbar-breadcrumb{font-size:0.8rem;color:var(--cinza-tec)}
+.topbar-actions{display:flex;gap:10px;align-items:center}
+.session-timer{font-size:0.72rem;color:var(--cinza-tec);padding:6px 10px;border-radius:20px;background:var(--input-bg);font-variant-numeric:tabular-nums}
+.session-timer.low{color:var(--warning)}
+.btn{padding:9px 18px;border-radius:var(--radius-sm);font-weight:600;font-size:0.85rem;transition:all .25s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--neon-cyan);color:var(--navy-esc)}
+.btn-primary:hover{box-shadow:0 0 20px rgba(0,240,255,0.3);transform:translateY(-1px)}
+.btn-secondary{background:var(--input-bg);color:var(--cinza-tec);border:1px solid rgba(255,255,255,0.08)}
+.btn-secondary:hover{color:var(--neon-cyan);border-color:var(--neon-cyan)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{opacity:0.85}
+.btn-success{background:var(--success);color:var(--navy-esc)}
+.btn-sm{padding:6px 12px;font-size:0.8rem}
+.btn-icon{padding:8px;width:36px;height:36px;justify-content:center}
+.content{padding:28px;max-width:1400px}
+
+/* DASHBOARD */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:28px}
+.stat-card{background:var(--card-bg);border:1px solid rgba(0,240,255,0.08);border-radius:var(--radius);padding:22px;position:relative;overflow:hidden;transition:all .3s}
+.stat-card:hover{border-color:rgba(0,240,255,0.2);transform:translateY(-2px)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--neon-cyan),var(--azul-eletrico));opacity:0;transition:opacity .3s}
+.stat-card:hover::before{opacity:1}
+.stat-icon{width:40px;height:40px;border-radius:10px;background:rgba(0,240,255,0.1);color:var(--neon-cyan);display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:14px}
+.stat-label{font-size:0.75rem;color:var(--cinza-tec);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.stat-value{font-size:1.9rem;font-weight:800;color:var(--branco)}
+.stat-sub{font-size:0.8rem;color:var(--cinza-tec);margin-top:4px}
+
+/* PANELS */
+.panel{background:var(--card-bg);border:1px solid rgba(0,240,255,0.08);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+.panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.panel-title{font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:10px}
+.panel-title::before{content:'';width:4px;height:20px;border-radius:2px;background:var(--neon-cyan)}
+.panel-desc{color:var(--cinza-tec);font-size:0.88rem;line-height:1.6;margin-bottom:20px}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,0.05)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:14px 16px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.9rem}
+th{color:var(--cinza-tec);font-weight:600;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px;background:rgba(0,0,0,0.2)}
+td{color:var(--branco)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(0,240,255,0.02)}
+.table-img{width:44px;height:44px;border-radius:6px;object-fit:cover;background:var(--input-bg)}
+.table-actions{display:flex;gap:6px}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600}
+.badge-on{background:rgba(0,255,136,0.15);color:var(--success)}
+.badge-off{background:rgba(255,71,87,0.15);color:var(--danger)}
+.badge-info{background:rgba(0,168,232,0.15);color:var(--azul-eletrico)}
+
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{margin-bottom:18px}
+.form-group.full{grid-column:1/-1}
+.form-label{display:block;font-size:0.85rem;font-weight:600;color:var(--cinza-tec);margin-bottom:8px}
+.form-label .required{color:var(--danger)}
+.form-input,.form-textarea,.form-select{width:100%;padding:11px 14px;border-radius:var(--radius-sm);background:var(--input-bg);border:1px solid rgba(255,255,255,0.08);color:var(--branco);font-size:0.9rem;transition:all .2s}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--neon-cyan);box-shadow:0 0 0 3px rgba(0,240,255,0.1)}
+.form-textarea{min-height:90px;resize:vertical;font-family:var(--font)}
+.form-select option{background:var(--input-bg)}
+.form-check{display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 0}
+.form-check input{width:18px;height:18px;accent-color:var(--neon-cyan);cursor:pointer}
+.form-hint{font-size:0.75rem;color:var(--cinza-tec);margin-top:5px;opacity:0.7}
+.logo-upload-area{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:20px;background:var(--input-bg);border-radius:var(--radius);border:2px dashed rgba(0,240,255,0.15);transition:all .3s}
+.logo-upload-area:hover{border-color:rgba(0,240,255,0.3)}
+.logo-preview-circle{width:100px;height:100px;border-radius:50%;background:none;border:none;display:flex;align-items:center;justify-content:center;overflow:visible;flex-shrink:0;position:relative}
+.logo-preview-circle svg,.logo-preview-circle img{width:100%;height:100%}
+.logo-upload-info{flex:1;min-width:200px}
+.logo-upload-info h4{font-size:1rem;margin-bottom:6px}
+.logo-upload-info p{font-size:0.82rem;color:var(--cinza-tec);margin-bottom:12px}
+.banner-preview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+.banner-preview{aspect-ratio:16/9;border-radius:var(--radius-sm);overflow:hidden;border:1px solid rgba(0,240,255,0.1);position:relative;background:var(--input-bg)}
+.banner-preview img{width:100%;height:100%;object-fit:cover}
+.banner-preview .bp-title{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(5,8,26,0.95));padding:10px 12px;font-size:0.8rem;font-weight:600}
+.banner-preview .bp-remove{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:var(--danger);color:#fff;font-size:0.85rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s}
+.banner-preview .bp-remove:hover{transform:scale(1.1)}
+.banner-empty{grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--cinza-tec);border:2px dashed rgba(0,240,255,0.1);border-radius:var(--radius)}
+.cat-admin-item{background:var(--input-bg);border-radius:var(--radius-sm);padding:18px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.04)}
+.cat-admin-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.cat-admin-header strong{flex:1;font-size:1rem}
+.cat-admin-subs{margin-top:14px;padding-left:20px;border-left:2px solid var(--neon-cyan)}
+.cat-sub-row{display:flex;align-items:center;gap:10px;padding:8px 0}
+.cat-sub-row span{color:var(--cinza-tec);font-size:0.9rem;flex:1}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,8,26,0.88);backdrop-filter:blur(8px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.active{display:flex;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--card-bg);border:1px solid rgba(0,240,255,0.15);border-radius:var(--radius);width:100%;max-width:620px;max-height:90vh;overflow-y:auto;padding:28px;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.modal-title{font-size:1.15rem;font-weight:700}
+.modal-close{background:none;color:var(--cinza-tec);font-size:1.4rem;padding:4px 8px;border-radius:4px}
+.modal-close:hover{color:var(--neon-cyan);background:rgba(255,255,255,0.05)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,0.05)}
+
+/* TOAST */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px}
+.toast{padding:14px 20px;border-radius:var(--radius-sm);font-size:0.88rem;font-weight:600;animation:slideIn .3s ease;min-width:280px;box-shadow:0 8px 24px rgba(0,0,0,0.3)}
+.toast-success{background:var(--success);color:var(--navy-esc)}
+.toast-error{background:var(--danger);color:#fff}
+.toast-info{background:var(--neon-cyan);color:var(--navy-esc)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.section{display:none}
+.section.active{display:block;animation:fadeIn .3s ease}
+.menu-toggle{display:none;background:none;color:var(--neon-cyan);font-size:1.4rem;padding:8px}
+@media(max-width:1024px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0}.menu-toggle{display:block}.form-grid{grid-template-columns:1fr}.banner-preview-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.content{padding:16px}.stats-grid{grid-template-columns:1fr 1fr}.panel{padding:18px}.banner-preview-grid{grid-template-columns:1fr}.topbar{padding:0 16px}.pin-box{width:36px;height:46px;font-size:1.2rem}.auth-shield{width:78px;height:78px}}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--navy-esc)}::-webkit-scrollbar-thumb{background:var(--neon-cyan);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     CAMADA DE AUTENTICAÇÃO
+     ============================================================ -->
+<div class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <!-- LOGO DTECH MASTER injetado via JS -->
+    <div class="auth-shield" id="authShield"></div>
+    <div class="auth-title" id="authTitle">Acesso Restrito</div>
+    <div class="auth-sub" id="authSub">Autentique-se para gerenciar a loja</div>
+
+    <!-- FORMULÁRIO DE LOGIN -->
+    <form id="loginForm" autocomplete="off" onsubmit="return false">
+      <div class="auth-field">
+        <label class="auth-label">Senha de acesso</label>
+        <input type="password" class="auth-input" id="loginPass" placeholder="••••••••" autocomplete="off">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Código de 7 dígitos (chave de descriptografia)</label>
+        <div class="pin-row" id="loginPinRow"></div>
+      </div>
+      <button type="button" class="auth-btn" id="loginBtn" onclick="doLogin()">🔓 Desbloquear Painel</button>
+      <div class="auth-msg" id="loginMsg"></div>
+    </form>
+
+    <!-- FORMULÁRIO DE CADASTRO (primeiro acesso) -->
+    <form id="setupForm" autocomplete="off" onsubmit="return false" style="display:none">
+      <div class="auth-field">
+        <label class="auth-label">Seu nome de usuário</label>
+        <input type="text" class="auth-input" id="setupName" placeholder="Ex: Dtech Admin" maxlength="40" autocomplete="off">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Senha de acesso</label>
+        <input type="password" class="auth-input" id="setupPass" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+        <div class="auth-strength"><div class="auth-strength-bar" id="setupStrength"></div></div>
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Confirmar senha</label>
+        <input type="password" class="auth-input" id="setupPass2" placeholder="Repita a senha" autocomplete="new-password">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Código de 7 dígitos (sua chave de criptografia)</label>
+        <div class="pin-row" id="setupPinRow"></div>
+      </div>
+      <button type="button" class="auth-btn" id="setupBtn" onclick="doSetup()">🔐 Criar Acesso Seguro</button>
+      <div class="auth-msg" id="setupMsg"></div>
+    </form>
+
+    <div class="auth-note">
+      <strong>⚠️ Importante:</strong> o código de 7 dígitos é a chave de criptografia dos seus dados.
+      Sem senha + código corretos, o conteúdo é matematicamente irrecuperável. Guarde ambos em local seguro.
+      Não existe "recuperação de senha" — por design.
+    </div>
+
+    <!-- LOCKOUT -->
+    <div class="lockout" id="lockout">
+      <div class="lockout-icon">🔒</div>
+      <div class="lockout-title">Acesso bloqueado</div>
+      <div class="lockout-time" id="lockoutTime">--</div>
+      <div class="lockout-text">Muitas tentativas incorretas. Aguarde antes de tentar novamente.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SIDEBAR
+     ============================================================ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo" id="sidebarLogo"></div>
+    <div>
+      <div class="sidebar-brand" id="sidebarBrand">Dtechmaster</div>
+      <div class="sidebar-version">Admin v2.1 · Seguro</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Principal</div>
+    <div class="nav-item active" data-section="dashboard" onclick="showSection('dashboard',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-section-label">Conteúdo</div>
+    <div class="nav-item" data-section="products" onclick="showSection('products',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      Produtos
+      <span class="badge-count" id="navCountProducts">0</span>
+    </div>
+    <div class="nav-item" data-section="banners" onclick="showSection('banners',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+      Banners
+      <span class="badge-count" id="navCountBanners">0/3</span>
+    </div>
+    <div class="nav-item" data-section="categories" onclick="showSection('categories',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+      Classes
+      <span class="badge-count" id="navCountCats">0</span>
+    </div>
+    <div class="nav-section-label">Aparência</div>
+    <div class="nav-item" data-section="brand" onclick="showSection('brand',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      Marca
+    </div>
+    <div class="nav-item" data-section="social" onclick="showSection('social',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Redes Sociais
+    </div>
+    <div class="nav-section-label">Sistema</div>
+    <div class="nav-item" data-section="settings" onclick="showSection('settings',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      Configurações
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <button onclick="exportData()">📤 Exportar JSON</button>
+    <button onclick="document.getElementById('importFile').click()">📥 Importar JSON</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="logout-btn" onclick="doLogout()">🚪 Encerrar Sessão</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <div>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+        <div class="topbar-breadcrumb" id="topbarBreadcrumb">Painel de controle</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <span class="session-timer" id="sessionTimer">15:00</span>
+      <a href="loja.html" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">👁️ Ver Loja</a>
+      <button class="btn btn-primary btn-sm" onclick="syncNow()">🔄 Sincronizar</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="section active" id="sec-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-label">Produtos</div><div class="stat-value" id="statProducts">0</div><div class="stat-sub" id="statFeatured">0 em destaque</div></div>
+        <div class="stat-card"><div class="stat-icon">🖼️</div><div class="stat-label">Banners</div><div class="stat-value" id="statBanners">0/3</div><div class="stat-sub">Slider de promoções</div></div>
+        <div class="stat-card"><div class="stat-icon">📂</div><div class="stat-label">Classes</div><div class="stat-value" id="statCats">0</div><div class="stat-sub" id="statSubs">0 subclasses</div></div>
+        <div class="stat-card"><div class="stat-icon">🔗</div><div class="stat-label">Redes Sociais</div><div class="stat-value" id="statSocial">0</div><div class="stat-sub">3 na seção marca</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">⚡ Ações Rápidas</div></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="showSection('products',document.querySelector('[data-section=products]'))">+ Novo Produto</button>
+          <button class="btn btn-secondary" onclick="showSection('banners',document.querySelector('[data-section=banners]'))">+ Novo Banner</button>
+          <button class="btn btn-secondary" onclick="showSection('brand',document.querySelector('[data-section=brand]'))">✏️ Editar Marca</button>
+          <button class="btn btn-secondary" onclick="showSection('categories',document.querySelector('[data-section=categories]'))">📂 Gerenciar Classes</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">📋 Últimos Produtos Adicionados</div></div>
+        <div class="table-wrap"><table><thead><tr><th>Imagem</th><th>Nome</th><th>Classe</th><th>Status</th><th>Data</th></tr></thead><tbody id="recentProducts"></tbody></table></div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-products">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">📦 Gerenciar Produtos</div><button class="btn btn-primary" onclick="openProductModal()">+ Adicionar Produto</button></div>
+        <p class="panel-desc">Produtos marcados como "Destaque" aparecem no slider de destaques da loja. Produtos sem classe ficam fora do accordion.</p>
+        <div class="table-wrap"><table><thead><tr><th>Imagem</th><th>Nome</th><th>Classe</th><th>Destaque</th><th>Ações</th></tr></thead><tbody id="productsTable"></tbody></table></div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-banners">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🖼️ Banners de Promoção</div><button class="btn btn-primary" onclick="openBannerModal()" id="btnAddBanner">+ Adicionar Banner</button></div>
+        <p class="panel-desc">Máximo de 3 banners. Aparecem em slider horizontal na seção Promoções da loja. Aspect ratio recomendado: 16:9.</p>
+        <div class="banner-preview-grid" id="bannerPreviewGrid"></div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-categories">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">📂 Classes & Subclasses</div><button class="btn btn-primary" onclick="openCategoryModal()">+ Adicionar Classe</button></div>
+        <p class="panel-desc">As classes aparecem como accordion na loja. Subclasses agrupam produtos dentro de cada classe. Produtos sem subclasse aparecem direto na classe.</p>
+        <div id="categoriesAdmin"></div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-brand">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🎯 Seção de Marca</div></div>
+        <p class="panel-desc">Seção central da loja, entre Destaques e Classes. Exibe logo grande, subtítulo, descrição e as 3 primeiras redes sociais.</p>
+        <div class="form-group full">
+          <label class="form-label">Logo da Loja</label>
+          <div class="logo-upload-area">
+            <div class="logo-preview-circle" id="logoPreview"></div>
+            <div class="logo-upload-info">
+              <h4>Upload de Logo</h4>
+              <p>Por padrão, o logo DTECH MASTER (SVG) é usado. Você pode enviar uma imagem própria (PNG, JPG ou SVG, máx. 500KB) para substituí-lo. Convertida para base64 e criptografada junto com os dados.</p>
+              <input type="file" id="logoFileInput" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('logoFileInput').click()">📁 Selecionar Imagem</button>
+                <button class="btn btn-danger btn-sm" onclick="removeLogoImage()" id="btnRemoveLogo" style="display:none">🗑️ Remover (usar SVG padrão)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-grid" style="margin-top:20px">
+          <div class="form-group"><label class="form-label">Logo Texto (fallback) <span class="required">*</span></label><input class="form-input" id="brandLogo" placeholder="DT" maxlength="4"><p class="form-hint">Usado apenas se nenhuma imagem for enviada</p></div>
+          <div class="form-group"><label class="form-label">Subtítulo <span class="required">*</span></label><input class="form-input" id="brandSubtitle" placeholder="Inserir um subtítulo"></div>
+          <div class="form-group full"><label class="form-label">Descrição</label><textarea class="form-textarea" id="brandDesc" placeholder="Inserir um pouquinho de texto"></textarea></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveBrand()">💾 Salvar Marca</button>
+      </div>
+    </div>
+
+    <div class="section" id="sec-social">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🔗 Redes Sociais</div><button class="btn btn-primary" onclick="openSocialModal()">+ Adicionar Rede</button></div>
+        <p class="panel-desc">As <strong>3 primeiras</strong> aparecem como círculos na seção de marca. <strong>Todas</strong> aparecem no footer da loja.</p>
+        <div class="table-wrap"><table><thead><tr><th>Ícone</th><th>Plataforma</th><th>Nome</th><th>URL</th><th>Ações</th></tr></thead><tbody id="socialTable"></tbody></table></div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-settings">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">⚙️ Configurações Gerais</div></div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Nome da Loja <span class="required">*</span></label><input class="form-input" id="setStoreName" placeholder="Dtechmaster"></div>
+          <div class="form-group"><label class="form-label">Tema Padrão da Loja</label><select class="form-select" id="setTheme"><option value="light">🌞 Modo Claro (nativo)</option><option value="dark">🌙 Modo Escuro</option></select><p class="form-hint">Define o tema inicial quando o usuário abre a loja pela primeira vez</p></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">💾 Salvar Configurações</button>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">📤 Exportar / Importar Dados</div></div>
+        <p class="panel-desc">Exporte o JSON para commitar no repositório público da loja. Importe um arquivo JSON para restaurar ou sincronizar dados entre dispositivos.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+          <button class="btn btn-primary" onclick="exportData()">📤 Exportar JSON</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('importFile2').click()">📥 Importar JSON</button>
+          <input type="file" id="importFile2" accept=".json" style="display:none" onchange="importData(event)">
+          <button class="btn btn-secondary" onclick="copyJSON()">📋 Copiar JSON</button>
+          <button class="btn btn-danger" onclick="resetData()">🗑️ Resetar Tudo</button>
+        </div>
+        <div class="form-group"><label class="form-label">JSON Atual (somente leitura)</label><textarea class="form-textarea" id="jsonPreview" rows="10" readonly style="font-family:monospace;font-size:0.78rem"></textarea></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🔐 Segurança & Sessão</div></div>
+        <p class="panel-desc" style="margin-bottom:16px">
+          <strong>Autenticação de usuário único</strong> com hash PBKDF2-SHA256 (150.000 iterações) e criptografia AES-GCM dos dados usando o código de 7 dígitos como chave derivada.
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-secondary" onclick="changePassword()">🔑 Alterar Senha</button>
+          <button class="btn btn-secondary" onclick="changePin()">🔢 Alterar Código de 7 Dígitos</button>
+        </div>
+        <div class="auth-note" style="margin-top:16px">
+          <strong>⚠️ Sem recuperação:</strong> por design, não existe "esqueci minha senha". Se perder senha OU código, os dados são irrecuperáveis. Mantenha o JSON exportado como backup em local seguro.
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">ℹ️ Sobre o Sistema</div></div>
+        <p class="panel-desc" style="margin-bottom:0">
+          <strong>Dtechmaster Admin v2.1 · Seguro</strong><br>
+          • Login de usuário único (senha + código de 7 dígitos)<br>
+          • Hash PBKDF2-SHA256 (150k iterações) + salt aleatório<br>
+          • Dados criptografados com AES-GCM 256-bit<br>
+          • Sessão em sessionStorage com timeout de 15 min<br>
+          • Rate limiting progressivo contra força bruta<br>
+          • Sanitização XSS em todos os campos<br>
+          • CSP (Content-Security-Policy) aplicada<br>
+          • Logo DTECH MASTER (SVG) padrão + upload customizado<br>
+          • Loja pública continua sem login (catálogo aberto)
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL PRODUTO -->
+<div class="modal-overlay" id="modalProduct">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modalProductTitle">Novo Produto</div><button class="modal-close" onclick="closeModal('modalProduct')">✕</button></div>
+    <input type="hidden" id="prodId">
+    <div class="form-grid">
+      <div class="form-group full"><label class="form-label">Nome do Produto <span class="required">*</span></label><input class="form-input" id="prodName" placeholder="Ex: Game Pass Premium" maxlength="120"></div>
+      <div class="form-group full"><label class="form-label">URL do Produto <span class="required">*</span></label><input class="form-input" id="prodUrl" placeholder="https://..."></div>
+      <div class="form-group full"><label class="form-label">URL da Imagem <span class="required">*</span></label><input class="form-input" id="prodImage" placeholder="https://..."><p class="form-hint">Use uma URL pública de imagem (Unsplash, Imgur, etc)</p></div>
+      <div class="form-group full"><label class="form-label">Descrição</label><textarea class="form-textarea" id="prodDesc" placeholder="Descrição que aparece na visualização detalhada do produto" maxlength="600"></textarea></div>
+      <div class="form-group"><label class="form-label">Classe (Categoria)</label><select class="form-select" id="prodCategory"></select></div>
+      <div class="form-group"><label class="form-label">Subclasse</label><select class="form-select" id="prodSubcategory"></select></div>
+      <div class="form-group full"><label class="form-check"><input type="checkbox" id="prodFeatured"><span>⭐ Marcar como Destaque (aparece no slider de destaques)</span></label></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modalProduct')">Cancelar</button><button class="btn btn-primary" onclick="saveProduct()">💾 Salvar Produto</button></div>
+  </div>
+</div>
+
+<!-- MODAL BANNER -->
+<div class="modal-overlay" id="modalBanner">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modalBannerTitle">Novo Banner</div><button class="modal-close" onclick="closeModal('modalBanner')">✕</button></div>
+    <input type="hidden" id="bannerId">
+    <div class="form-group"><label class="form-label">Título do Banner <span class="required">*</span></label><input class="form-input" id="bannerTitle" placeholder="Ex: 🎮 Novos Games Disponíveis" maxlength="80"></div>
+    <div class="form-group"><label class="form-label">URL da Imagem <span class="required">*</span></label><input class="form-input" id="bannerImage" placeholder="https://... (aspect ratio 16:9)"></div>
+    <div class="form-group"><label class="form-label">URL de Destino</label><input class="form-input" id="bannerUrl" placeholder="https://... (opcional)"></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modalBanner')">Cancelar</button><button class="btn btn-primary" onclick="saveBanner()">💾 Salvar Banner</button></div>
+  </div>
+</div>
+
+<!-- MODAL CATEGORIA -->
+<div class="modal-overlay" id="modalCategory">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modalCatTitle">Nova Classe</div><button class="modal-close" onclick="closeModal('modalCategory')">✕</button></div>
+    <input type="hidden" id="catId"><input type="hidden" id="catParentId">
+    <div class="form-group"><label class="form-label">Nome <span class="required">*</span></label><input class="form-input" id="catName" placeholder="Ex: Games" maxlength="60"></div>
+    <div class="form-group"><label class="form-label">URL da Imagem (opcional)</label><input class="form-input" id="catImage" placeholder="https://..."><p class="form-hint">Ícone pequeno que aparece ao lado do nome no accordion</p></div>
+    <div class="form-group"><label class="form-label">URL de Destino (opcional)</label><input class="form-input" id="catUrl" placeholder="https://..."></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modalCategory')">Cancelar</button><button class="btn btn-primary" onclick="saveCategory()">💾 Salvar</button></div>
+  </div>
+</div>
+
+<!-- MODAL SOCIAL -->
+<div class="modal-overlay" id="modalSocial">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modalSocialTitle">Nova Rede Social</div><button class="modal-close" onclick="closeModal('modalSocial')">✕</button></div>
+    <input type="hidden" id="socialId">
+    <div class="form-group"><label class="form-label">Plataforma <span class="required">*</span></label><select class="form-select" id="socialPlatform"><option value="instagram">📷 Instagram</option><option value="tiktok">🎵 TikTok</option><option value="whatsapp">💬 WhatsApp</option><option value="youtube">▶️ YouTube</option><option value="twitter">🐦 Twitter/X</option><option value="facebook">👤 Facebook</option><option value="telegram">✈️ Telegram</option><option value="other">🔗 Outro</option></select></div>
+    <div class="form-group"><label class="form-label">Nome Exibido <span class="required">*</span></label><input class="form-input" id="socialName" placeholder="Ex: @dtechmaster" maxlength="60"></div>
+    <div class="form-group"><label class="form-label">URL <span class="required">*</span></label><input class="form-input" id="socialUrl" placeholder="https://instagram.com/..."></div>
+    <div class="form-group"><label class="form-label">Ícone Customizado (opcional)</label><input class="form-input" id="socialIcon" placeholder="📷 (emoji)" maxlength="4"><p class="form-hint">Deixe vazio para usar o ícone padrão da plataforma</p></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modalSocial')">Cancelar</button><button class="btn btn-primary" onclick="saveSocial()">💾 Salvar</button></div>
+  </div>
+</div>
+
+<!-- MODAL ALTERAR CREDENCIAIS -->
+<div class="modal-overlay" id="modalCred">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modalCredTitle">Alterar Credencial</div><button class="modal-close" onclick="closeModal('modalCred')">✕</button></div>
+    <input type="hidden" id="credMode">
+    <div class="form-group"><label class="form-label">Senha atual</label><input type="password" class="auth-input" id="credCurrent" placeholder="••••••••" autocomplete="off"></div>
+    <div class="form-group"><label class="form-label">Código atual (7 dígitos)</label><div class="pin-row" id="credPinRow"></div></div>
+    <div class="form-group" id="credNewPassGroup" style="display:none"><label class="form-label">Nova senha</label><input type="password" class="auth-input" id="credNewPass" placeholder="Mínimo 8 caracteres" autocomplete="new-password"></div>
+    <div class="form-group" id="credNewPinGroup" style="display:none"><label class="form-label">Novo código (7 dígitos)</label><div class="pin-row" id="credNewPinRow"></div></div>
+    <div class="auth-msg" id="credMsg"></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('modalCred')">Cancelar</button><button class="btn btn-primary" onclick="doChangeCred()">💾 Confirmar Alteração</button></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ============================================================
+   DTECH MASTER — ADMIN v2.1 · SEGURANÇA
+   ============================================================ */
+
+/* ===== LOGO DTECH MASTER — SVG embutido (idêntico à loja) ===== */
+const LOGO_SVG = `
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dtech Master">
+  <defs>
+    <radialGradient id="sphA" cx="42%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="70%" stop-color="#eef3f8"/>
+      <stop offset="100%" stop-color="#b9c6d6"/>
+    </radialGradient>
+    <linearGradient id="merA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7CFFB0"/>
+      <stop offset="45%" stop-color="#00F0FF"/>
+      <stop offset="100%" stop-color="#00A8E8"/>
+    </linearGradient>
+    <path id="arcA" d="M26,80 A74,74 0 0 1 174,80" fill="none"/>
+  </defs>
+  <text font-family="'Segoe UI',Arial,sans-serif" font-size="16" font-weight="800" letter-spacing="1.2" fill="#33E6D2">
+    <textPath href="#arcA" startOffset="50%" text-anchor="middle">DTECH MASTER</textPath>
+  </text>
+  <circle cx="100" cy="120" r="54" fill="url(#sphA)"/>
+  <circle cx="100" cy="120" r="54" fill="none" stroke="#1E90C8" stroke-width="1.5" opacity="0.55"/>
+  <g fill="none" stroke="url(#merA)" stroke-width="5" stroke-linecap="round">
+    <path d="M100,66 V174"/>
+    <ellipse cx="100" cy="120" rx="20" ry="54"/>
+    <ellipse cx="100" cy="120" rx="40" ry="54"/>
+    <ellipse cx="100" cy="120" rx="54" ry="54"/>
+  </g>
+  <ellipse cx="82" cy="98" rx="14" ry="9" fill="#ffffff" opacity="0.55"/>
+</svg>`;
+
+// ---------- CONSTANTES ----------
+const DATA_KEY = 'dm_data_v1';
+const AUTH_KEY = 'dm_auth_v1';
+const SESS_KEY = 'dm_session_v1';
+const PBKDF2_ITER = 150000;
+const SESSION_MINUTES = 15;
+const MAX_ATTEMPTS = 5;
+const LOCK_SECONDS = [0, 15, 30, 60, 120, 300];
+
+// ---------- ESTADO ----------
+let APP_DATA = null;
+let currentKey = null;
+let sessionTimer = null;
+let sessionRemaining = SESSION_MINUTES * 60;
+let attempts = 0;
+let lockInterval = null;
+
+// ---------- HELPERS CRIPTO ----------
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+function b64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+function unb64(str) { return Uint8Array.from(atob(str), c => c.charCodeAt(0)); }
+function randBytes(n) { const b = new Uint8Array(n); crypto.getRandomValues(b); return b; }
+
+async function deriveKey(pin, salt) {
+  const base = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: PBKDF2_ITER, hash: 'SHA-256' },
+    base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+  );
+}
+async function hashPassword(pass, salt) {
+  const key = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: PBKDF2_ITER, hash: 'SHA-256' }, key, 256);
+  return b64(bits);
+}
+async function encryptData(obj, key) {
+  const iv = randBytes(12);
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(obj)));
+  return { iv: b64(iv), ct: b64(ct) };
+}
+async function decryptData(blob, key) {
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(blob.iv) }, key, unb64(blob.ct));
+  return JSON.parse(dec.decode(pt));
+}
+
+// ---------- SANITIZAÇÃO XSS ----------
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function sanitizeString(s) { return typeof s === 'string' ? s.replace(/[<>]/g, '').slice(0, 500) : ''; }
+
+// ---------- VALIDAÇÃO DE SCHEMA ----------
+const DEFAULT_DATA = {
+  settings: { storeName: 'Dtechmaster', logo: 'DT', logoImage: '', brandSubtitle: 'Inserir um subtítulo', brandDesc: 'Inserir um pouquinho de texto', defaultTheme: 'light' },
+  banners: [], products: [], categories: [], socialLinks: []
+};
+function sanitizeData(d) {
+  if (!d || typeof d !== 'object') return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  const out = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  out.settings = { ...out.settings, ...(d.settings || {}) };
+  out.settings.storeName = sanitizeString(out.settings.storeName) || 'Dtechmaster';
+  out.settings.logo = sanitizeString(out.settings.logo).slice(0, 4) || 'DT';
+  out.settings.brandSubtitle = sanitizeString(out.settings.brandSubtitle);
+  out.settings.brandDesc = sanitizeString(out.settings.brandDesc);
+  if (typeof out.settings.logoImage !== 'string' || !out.settings.logoImage.startsWith('data:image/')) out.settings.logoImage = '';
+  out.banners = Array.isArray(d.banners) ? d.banners.slice(0, 3).map(b => ({ id: +b.id || 1, title: sanitizeString(b.title), image: sanitizeString(b.image), url: sanitizeString(b.url) })) : [];
+  out.products = Array.isArray(d.products) ? d.products.map(p => ({ id: +p.id || 1, name: sanitizeString(p.name), url: sanitizeString(p.url), image: sanitizeString(p.image), description: sanitizeString(p.description), category: sanitizeString(p.category), subcategory: sanitizeString(p.subcategory), featured: !!p.featured, dateAdded: sanitizeString(p.dateAdded) })) : [];
+  out.categories = Array.isArray(d.categories) ? d.categories.map(c => ({ id: +c.id || 1, name: sanitizeString(c.name), image: sanitizeString(c.image), url: sanitizeString(c.url), subcategories: Array.isArray(c.subcategories) ? c.subcategories.map(s => ({ id: +s.id || 1, name: sanitizeString(s.name), image: sanitizeString(s.image), url: sanitizeString(s.url) })) : [] })) : [];
+  out.socialLinks = Array.isArray(d.socialLinks) ? d.socialLinks.map(s => ({ id: +s.id || 1, platform: sanitizeString(s.platform), name: sanitizeString(s.name), url: sanitizeString(s.url), icon: sanitizeString(s.icon).slice(0, 4) })) : [];
+  return out;
+}
+
+// ---------- PIN COMPONENT (7 dígitos) ----------
+function buildPinRow(containerId) {
+  const el = document.getElementById(containerId);
+  if (el.dataset.built) return;
+  el.innerHTML = Array.from({ length: 7 }, (_, i) =>
+    `<input type="text" class="pin-box" data-i="${i}" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">`
+  ).join('');
+  el.dataset.built = '1';
+  el.querySelectorAll('.pin-box').forEach((box, i, all) => {
+    box.addEventListener('input', e => {
+      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 1);
+      e.target.classList.toggle('filled', !!e.target.value);
+      if (e.target.value && i < all.length - 1) all[i + 1].focus();
+    });
+    box.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !e.target.value && i > 0) all[i - 1].focus();
+      if (e.key === 'ArrowLeft' && i > 0) all[i - 1].focus();
+      if (e.key === 'ArrowRight' && i < all.length - 1) all[i + 1].focus();
+    });
+    box.addEventListener('paste', e => {
+      e.preventDefault();
+      const digits = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 7).split('');
+      all.forEach((b, j) => { b.value = digits[j] || ''; b.classList.toggle('filled', !!digits[j]); });
+      (all[Math.min(digits.length, 6)] || all[6]).focus();
+    });
+  });
+}
+function readPin(containerId) {
+  return Array.from(document.getElementById(containerId).querySelectorAll('.pin-box')).map(b => b.value).join('');
+}
+function clearPin(containerId) {
+  document.getElementById(containerId).querySelectorAll('.pin-box').forEach(b => { b.value = ''; b.classList.remove('filled'); });
+}
+
+// ---------- LOCKOUT ----------
+function startLockout(seconds) {
+  const el = document.getElementById('lockout');
+  const timeEl = document.getElementById('lockoutTime');
+  el.classList.add('active');
+  let left = seconds;
+  const tick = () => {
+    const m = Math.floor(left / 60), s = left % 60;
+    timeEl.textContent = m > 0 ? `${m}:${String(s).padStart(2, '0')}` : `${s}s`;
+    if (left <= 0) { clearInterval(lockInterval); el.classList.remove('active'); attempts = 0; }
+    left--;
+  };
+  tick();
+  lockInterval = setInterval(tick, 1000);
+}
+
+// ---------- SETUP (primeiro acesso) ----------
+function showSetup() {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('setupForm').style.display = 'block';
+  document.getElementById('authTitle').textContent = 'Criar Acesso Seguro';
+  document.getElementById('authSub').textContent = 'Primeiro acesso — configure nome, senha e código de 7 dígitos';
+  document.getElementById('authShield').innerHTML = LOGO_SVG;
+  buildPinRow('setupPinRow');
+}
+
+async function doSetup() {
+  const name = document.getElementById('setupName').value.trim();
+  const pass = document.getElementById('setupPass').value;
+  const pass2 = document.getElementById('setupPass2').value;
+  const pin = readPin('setupPinRow');
+  const msg = document.getElementById('setupMsg');
+  msg.className = 'auth-msg';
+
+  if (!name) { msg.textContent = 'Informe seu nome de usuário.'; msg.classList.add('err'); return; }
+  if (pass.length < 8) { msg.textContent = 'A senha deve ter no mínimo 8 caracteres.'; msg.classList.add('err'); return; }
+  if (pass !== pass2) { msg.textContent = 'As senhas não coincidem.'; msg.classList.add('err'); return; }
+  if (pin.length !== 7) { msg.textContent = 'O código deve ter exatamente 7 dígitos.'; msg.classList.add('err'); return; }
+
+  const btn = document.getElementById('setupBtn');
+  btn.disabled = true; btn.textContent = '⏳ Gerando chaves...';
+
+  try {
+    const salt = randBytes(16);
+    const pinSalt = randBytes(16);
+    const hash = await hashPassword(pass, salt);
+    const key = await deriveKey(pin, pinSalt);
+    const payload = sanitizeData(DEFAULT_DATA);
+    const blob = await encryptData(payload, key);
+
+    localStorage.setItem(AUTH_KEY, JSON.stringify({ name, salt: b64(salt), hash, pinSalt: b64(pinSalt) }));
+    localStorage.setItem(DATA_KEY, JSON.stringify(blob));
+
+    currentKey = key;
+    APP_DATA = payload;
+    startSession();
+    toast('Acesso criado com sucesso!', 'success');
+  } catch (e) {
+    console.error(e);
+    msg.textContent = 'Erro ao criar acesso: ' + e.message;
+    msg.classList.add('err');
+  } finally {
+    btn.disabled = false; btn.textContent = '🔐 Criar Acesso Seguro';
+  }
+}
+
+document.getElementById('setupPass')?.addEventListener('input', function () {
+  const bar = document.getElementById('setupStrength');
+  const v = this.value;
+  let score = 0;
+  if (v.length >= 8) score++;
+  if (/[A-Z]/.test(v)) score++;
+  if (/[0-9]/.test(v)) score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  const pct = [0, 25, 50, 75, 100][score];
+  bar.style.width = pct + '%';
+  bar.style.background = ['#ff4757', '#ffa502', '#00d4e8', '#00ff88'][Math.min(score, 3)] || '#ff4757';
+});
+
+// ---------- LOGIN ----------
+function showLogin() {
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('setupForm').style.display = 'none';
+  document.getElementById('authTitle').textContent = 'Acesso Restrito';
+  const auth = getAuth();
+  document.getElementById('authSub').textContent = auth ? `Bem-vindo de volta, ${auth.name}` : 'Autentique-se para gerenciar a loja';
+  document.getElementById('authShield').innerHTML = LOGO_SVG;
+  buildPinRow('loginPinRow');
+}
+
+function getAuth() {
+  try { return JSON.parse(localStorage.getItem(AUTH_KEY)); } catch { return null; }
+}
+
+async function doLogin() {
+  const msg = document.getElementById('loginMsg');
+  msg.className = 'auth-msg';
+  const auth = getAuth();
+  if (!auth) { msg.textContent = 'Nenhum acesso cadastrado.'; msg.classList.add('err'); return; }
+
+  const pass = document.getElementById('loginPass').value;
+  const pin = readPin('loginPinRow');
+  if (!pass || pin.length !== 7) { msg.textContent = 'Preencha senha e os 7 dígitos.'; msg.classList.add('err'); return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = '⏳ Verificando...';
+
+  try {
+    const hash = await hashPassword(pass, unb64(auth.salt));
+    if (hash !== auth.hash) throw new Error('badpass');
+    const key = await deriveKey(pin, unb64(auth.pinSalt));
+    const blob = JSON.parse(localStorage.getItem(DATA_KEY));
+    const payload = await decryptData(blob, key);
+
+    currentKey = key;
+    APP_DATA = sanitizeData(payload);
+    attempts = 0;
+    startSession();
+    toast(`Sessão iniciada como ${auth.name}`, 'success');
+  } catch (e) {
+    attempts++;
+    const lock = LOCK_SECONDS[Math.min(attempts, LOCK_SECONDS.length - 1)];
+    if (e.message === 'badpass') msg.textContent = 'Senha incorreta.';
+    else msg.textContent = 'Código de 7 dígitos incorreto (chave inválida).';
+    msg.classList.add('err');
+    clearPin('loginPinRow');
+    document.getElementById('loginPass').value = '';
+    if (attempts >= MAX_ATTEMPTS) startLockout(lock);
+    else if (attempts >= 3) { msg.textContent += ` ${MAX_ATTEMPTS - attempts} tentativa(s) restante(s).`; }
+  } finally {
+    btn.disabled = false; btn.textContent = '🔓 Desbloquear Painel';
+  }
+}
+
+document.getElementById('loginPass')?.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ---------- SESSÃO ----------
+function startSession() {
+  sessionStorage.setItem(SESS_KEY, JSON.stringify({ t: Date.now(), exp: Date.now() + SESSION_MINUTES * 60000 }));
+  document.getElementById('authGate').classList.add('hidden');
+  sessionRemaining = SESSION_MINUTES * 60;
+  updateTimer();
+  clearInterval(sessionTimer);
+  sessionTimer = setInterval(() => {
+    sessionRemaining--;
+    updateTimer();
+    if (sessionRemaining <= 0) doLogout(true);
+  }, 1000);
+  refreshAll();
+}
+function updateTimer() {
+  const m = Math.floor(sessionRemaining / 60), s = sessionRemaining % 60;
+  const el = document.getElementById('sessionTimer');
+  el.textContent = `${m}:${String(s).padStart(2, '0')}`;
+  el.classList.toggle('low', sessionRemaining < 120);
+}
+['click', 'keydown', 'mousemove'].forEach(ev => document.addEventListener(ev, () => {
+  if (!currentKey) return;
+  sessionStorage.setItem(SESS_KEY, JSON.stringify({ t: Date.now(), exp: Date.now() + SESSION_MINUTES * 60000 }));
+  sessionRemaining = SESSION_MINUTES * 60;
+}, { passive: true }));
+
+function doLogout(auto) {
+  clearInterval(sessionTimer);
+  sessionStorage.removeItem(SESS_KEY);
+  currentKey = null; APP_DATA = null;
+  document.getElementById('authGate').classList.remove('hidden');
+  clearPin('loginPinRow');
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginMsg').textContent = auto ? 'Sessão expirada por inatividade.' : '';
+  document.getElementById('loginMsg').className = 'auth-msg' + (auto ? ' warn' : '');
+  if (auto) toast('Sessão expirada.', 'info');
+}
+
+// ---------- PERSISTÊNCIA CRIPTOGRAFADA ----------
+async function saveData() {
+  if (!currentKey || !APP_DATA) return;
+  try {
+    const blob = await encryptData(APP_DATA, currentKey);
+    localStorage.setItem(DATA_KEY, JSON.stringify(blob));
+    localStorage.setItem('dm_sync_v1', Date.now().toString());
+    refreshAll();
+  } catch (e) { console.error('Save failed', e); toast('Falha ao salvar dados.', 'error'); }
+}
+
+// ---------- TOAST ----------
+function toast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = 'toast toast-' + type; t.textContent = msg;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ---------- SECTIONS / MODALS ----------
+function showSection(name, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const titles = { dashboard: ['Dashboard', 'Painel de controle'], products: ['Produtos', 'Gerenciar catálogo'], banners: ['Banners', 'Slider de promoções (máx. 3)'], categories: ['Classes', 'Categorias e subclasses'], brand: ['Marca', 'Seção central da loja'], social: ['Redes Sociais', 'Links e ícones'], settings: ['Configurações', 'Ajustes e segurança'] };
+  const [t, b] = titles[name] || [name, ''];
+  document.getElementById('topbarTitle').textContent = t;
+  document.getElementById('topbarBreadcrumb').textContent = b;
+  document.getElementById('sidebar').classList.remove('open');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('active'); }));
+function genId(arr) { return arr.length ? Math.max(...arr.map(x => x.id)) + 1 : 1; }
+
+// ---------- LOGO (SVG padrão + upload customizado) ----------
+function handleLogoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 500 * 1024) { toast('Imagem muito grande (máx. 500KB)', 'error'); event.target.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = e => { APP_DATA.settings.logoImage = e.target.result; updateLogoPreview(); toast('Logo carregado! Salve a Marca para confirmar.'); };
+  reader.readAsDataURL(file);
+}
+function removeLogoImage() { APP_DATA.settings.logoImage = ''; updateLogoPreview(); toast('Logo removido — SVG padrão restaurado', 'info'); }
+function updateLogoPreview() {
+  const preview = document.getElementById('logoPreview'), btnRemove = document.getElementById('btnRemoveLogo'), sidebarLogo = document.getElementById('sidebarLogo');
+  const imgSrc = APP_DATA?.settings?.logoImage || '';
+  preview.innerHTML = imgSrc ? `<img src="${imgSrc}" onerror="this.parentNode.innerHTML=window.LOGO_SVG">` : LOGO_SVG;
+  btnRemove.style.display = imgSrc ? 'inline-flex' : 'none';
+  if (sidebarLogo) sidebarLogo.innerHTML = imgSrc ? `<img src="${imgSrc}" onerror="this.parentNode.innerHTML=window.LOGO_SVG">` : LOGO_SVG;
+}
+
+// ---------- PRODUCTS ----------
+function openProductModal(id) {
+  document.getElementById('modalProductTitle').textContent = id ? 'Editar Produto' : 'Novo Produto';
+  document.getElementById('prodId').value = id || '';
+  const catSel = document.getElementById('prodCategory');
+  catSel.innerHTML = '<option value="">-- Selecionar classe --</option>' + APP_DATA.categories.map(c => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
+  const subSel = document.getElementById('prodSubcategory');
+  subSel.innerHTML = '<option value="">-- Selecionar subclasse --</option>';
+  catSel.onchange = function () { const cat = APP_DATA.categories.find(c => c.name === this.value); subSel.innerHTML = '<option value="">-- Selecionar subclasse --</option>' + (cat?.subcategories || []).map(s => `<option value="${esc(s.name)}">${esc(s.name)}</option>`).join(''); };
+  if (id) { const p = APP_DATA.products.find(x => x.id === id); if (!p) return; document.getElementById('prodName').value = p.name; document.getElementById('prodUrl').value = p.url; document.getElementById('prodImage').value = p.image; document.getElementById('prodDesc').value = p.description || ''; document.getElementById('prodCategory').value = p.category || ''; catSel.onchange(); document.getElementById('prodSubcategory').value = p.subcategory || ''; document.getElementById('prodFeatured').checked = !!p.featured; }
+  else { ['prodName', 'prodUrl', 'prodImage', 'prodDesc'].forEach(i => document.getElementById(i).value = ''); document.getElementById('prodCategory').value = ''; catSel.onchange(); document.getElementById('prodFeatured').checked = false; }
+  openModal('modalProduct');
+}
+function saveProduct() {
+  const name = sanitizeString(document.getElementById('prodName').value).trim();
+  const url = document.getElementById('prodUrl').value.trim();
+  const image = document.getElementById('prodImage').value.trim();
+  if (!name || !url || !image) { toast('Preencha nome, URL e imagem', 'error'); return; }
+  if (!/^https?:\/\//i.test(url) || !/^https?:\/\//i.test(image)) { toast('URLs devem começar com http(s)://', 'error'); return; }
+  const id = document.getElementById('prodId').value;
+  const data = { name, url, image, description: sanitizeString(document.getElementById('prodDesc').value), category: document.getElementById('prodCategory').value, subcategory: document.getElementById('prodSubcategory').value, featured: document.getElementById('prodFeatured').checked, dateAdded: new Date().toISOString().split('T')[0] };
+  if (id) { const idx = APP_DATA.products.findIndex(x => x.id === parseInt(id)); if (idx > -1) APP_DATA.products[idx] = { ...APP_DATA.products[idx], ...data }; toast('Produto atualizado!'); }
+  else { data.id = genId(APP_DATA.products); APP_DATA.products.push(data); toast('Produto adicionado!'); }
+  saveData(); closeModal('modalProduct');
+}
+function deleteProduct(id) { if (!confirm('Excluir este produto?')) return; APP_DATA.products = APP_DATA.products.filter(x => x.id !== id); saveData(); toast('Produto excluído', 'info'); }
+function renderProducts() {
+  const tbody = document.getElementById('productsTable');
+  if (!APP_DATA.products.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--cinza-tec);padding:40px">Nenhum produto cadastrado.</td></tr>'; return; }
+  tbody.innerHTML = APP_DATA.products.map(p => `<tr><td><img class="table-img" src="${esc(p.image)}" onerror="this.style.background='var(--input-bg)'"></td><td><strong>${esc(p.name)}</strong></td><td>${esc(p.category || '—')} ${p.subcategory ? '<span style="color:var(--cinza-tec)">›</span> ' + esc(p.subcategory) : ''}</td><td><span class="badge ${p.featured ? 'badge-on' : 'badge-off'}">${p.featured ? '⭐ Destaque' : 'Normal'}</span></td><td class="table-actions"><button class="btn btn-secondary btn-sm btn-icon" onclick="openProductModal(${p.id})">✏️</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteProduct(${p.id})">🗑️</button></td></tr>`).join('');
+}
+
+// ---------- BANNERS ----------
+function openBannerModal(id) {
+  if (!id && APP_DATA.banners.length >= 3) { toast('Máximo de 3 banners', 'error'); return; }
+  document.getElementById('modalBannerTitle').textContent = id ? 'Editar Banner' : 'Novo Banner';
+  document.getElementById('bannerId').value = id || '';
+  if (id) { const b = APP_DATA.banners.find(x => x.id === id); if (!b) return; document.getElementById('bannerTitle').value = b.title; document.getElementById('bannerImage').value = b.image; document.getElementById('bannerUrl').value = b.url || ''; }
+  else { ['bannerTitle', 'bannerImage', 'bannerUrl'].forEach(i => document.getElementById(i).value = ''); }
+  openModal('modalBanner');
+}
+function saveBanner() {
+  const title = sanitizeString(document.getElementById('bannerTitle').value).trim();
+  const image = document.getElementById('bannerImage').value.trim();
+  if (!title || !image) { toast('Preencha título e imagem', 'error'); return; }
+  if (!/^https?:\/\//i.test(image)) { toast('URL da imagem deve começar com http(s)://', 'error'); return; }
+  const id = document.getElementById('bannerId').value;
+  const data = { title, image, url: document.getElementById('bannerUrl').value.trim() };
+  if (id) { const idx = APP_DATA.banners.findIndex(x => x.id === parseInt(id)); if (idx > -1) APP_DATA.banners[idx] = { ...APP_DATA.banners[idx], ...data }; toast('Banner atualizado!'); }
+  else { if (APP_DATA.banners.length >= 3) { toast('Máximo de 3 banners', 'error'); return; } data.id = genId(APP_DATA.banners); APP_DATA.banners.push(data); toast('Banner adicionado!'); }
+  saveData(); closeModal('modalBanner');
+}
+function deleteBanner(id) { if (!confirm('Excluir este banner?')) return; APP_DATA.banners = APP_DATA.banners.filter(x => x.id !== id); saveData(); toast('Banner excluído', 'info'); }
+function renderBanners() {
+  const grid = document.getElementById('bannerPreviewGrid'), btn = document.getElementById('btnAddBanner'), banners = APP_DATA.banners;
+  btn.style.display = banners.length >= 3 ? 'none' : 'inline-flex';
+  btn.textContent = banners.length >= 3 ? '✓ Limite Atingido (3/3)' : '+ Adicionar Banner';
+  if (!banners.length) { grid.innerHTML = '<div class="banner-empty">🖼️ Nenhum banner cadastrado.</div>'; return; }
+  grid.innerHTML = banners.map((b, i) => `<div class="banner-preview"><img src="${esc(b.image)}" onerror="this.style.background='var(--input-bg)'"><div class="bp-title">${i + 1}. ${esc(b.title)}</div><div class="bp-remove" onclick="deleteBanner(${b.id})">✕</div></div>`).join('');
+}
+
+// ---------- CATEGORIES ----------
+function openCategoryModal(id, parentId) {
+  document.getElementById('catId').value = id || '';
+  document.getElementById('catParentId').value = parentId || '';
+  document.getElementById('modalCatTitle').textContent = parentId ? 'Nova Subclasse' : (id ? 'Editar Classe' : 'Nova Classe');
+  if (id && !parentId) { const c = APP_DATA.categories.find(x => x.id === id); if (c) { document.getElementById('catName').value = c.name; document.getElementById('catImage').value = c.image || ''; document.getElementById('catUrl').value = c.url || ''; } }
+  else if (id && parentId) { const cat = APP_DATA.categories.find(x => x.id === parentId); const sub = cat?.subcategories?.find(s => s.id === id); if (sub) { document.getElementById('catName').value = sub.name; document.getElementById('catImage').value = sub.image || ''; document.getElementById('catUrl').value = sub.url || ''; } }
+  else { ['catName', 'catImage', 'catUrl'].forEach(i => document.getElementById(i).value = ''); }
+  openModal('modalCategory');
+}
+function saveCategory() {
+  const name = sanitizeString(document.getElementById('catName').value).trim();
+  if (!name) { toast('Preencha o nome', 'error'); return; }
+  const id = document.getElementById('catId').value, parentId = document.getElementById('catParentId').value;
+  const data = { name, image: document.getElementById('catImage').value.trim(), url: document.getElementById('catUrl').value.trim() };
+  if (parentId) { const cat = APP_DATA.categories.find(x => x.id === parseInt(parentId)); if (!cat) return; if (!cat.subcategories) cat.subcategories = []; if (id) { const idx = cat.subcategories.findIndex(s => s.id === parseInt(id)); if (idx > -1) cat.subcategories[idx] = { ...cat.subcategories[idx], ...data }; toast('Subclasse atualizada!'); } else { data.id = cat.subcategories.length ? Math.max(...cat.subcategories.map(s => s.id)) + 1 : 1; cat.subcategories.push(data); toast('Subclasse adicionada!'); } }
+  else { if (id) { const idx = APP_DATA.categories.findIndex(x => x.id === parseInt(id)); if (idx > -1) APP_DATA.categories[idx] = { ...APP_DATA.categories[idx], ...data }; toast('Classe atualizada!'); } else { data.id = genId(APP_DATA.categories); data.subcategories = []; APP_DATA.categories.push(data); toast('Classe adicionada!'); } }
+  saveData(); closeModal('modalCategory');
+}
+function deleteCategory(id, parentId) { if (!confirm('Excluir?')) return; if (parentId) { const cat = APP_DATA.categories.find(x => x.id === parentId); if (cat) cat.subcategories = (cat.subcategories || []).filter(s => s.id !== id); } else { APP_DATA.categories = APP_DATA.categories.filter(x => x.id !== id); } saveData(); toast('Excluído', 'info'); }
+function renderCategories() {
+  const c = document.getElementById('categoriesAdmin');
+  if (!APP_DATA.categories.length) { c.innerHTML = '<div class="banner-empty">📂 Nenhuma classe cadastrada.</div>'; return; }
+  c.innerHTML = APP_DATA.categories.map(cat => { const pc = APP_DATA.products.filter(p => p.category === cat.name).length; return `<div class="cat-admin-item"><div class="cat-admin-header">${cat.image ? `<img src="${esc(cat.image)}" style="width:42px;height:42px;border-radius:8px;object-fit:cover" onerror="this.style.display='none'">` : '<span style="width:42px;height:42px;background:var(--input-bg);border-radius:8px;display:flex;align-items:center;justify-content:center">📁</span>'}<div style="flex:1"><strong>${esc(cat.name)}</strong><div style="font-size:0.78rem;color:var(--cinza-tec);margin-top:2px">${pc} produto(s) · ${(cat.subcategories || []).length} subclasse(s)</div></div><button class="btn btn-secondary btn-sm" onclick="openCategoryModal(${cat.id})">✏️</button><button class="btn btn-primary btn-sm" onclick="openCategoryModal(null,${cat.id})">+ Subclasse</button><button class="btn btn-danger btn-sm" onclick="deleteCategory(${cat.id})">🗑️</button></div>${(cat.subcategories || []).length ? `<div class="cat-admin-subs">${cat.subcategories.map(s => { const sc = APP_DATA.products.filter(p => p.category === cat.name && p.subcategory === s.name).length; return `<div class="cat-sub-row"><span>└ <strong>${esc(s.name)}</strong> <span style="font-size:0.75rem;opacity:0.7">(${sc})</span></span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm btn-icon" onclick="openCategoryModal(${s.id},${cat.id})">✏️</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteCategory(${s.id},${cat.id})">🗑️</button></div></div>`; }).join('')}</div>` : '<div style="font-size:0.8rem;color:var(--cinza-tec);margin-top:10px;padding-left:4px">Nenhuma subclasse</div>'}</div>`; }).join('');
+}
+
+// ---------- BRAND ----------
+function saveBrand() {
+  APP_DATA.settings.brandSubtitle = sanitizeString(document.getElementById('brandSubtitle').value);
+  APP_DATA.settings.brandDesc = sanitizeString(document.getElementById('brandDesc').value);
+  APP_DATA.settings.logo = sanitizeString(document.getElementById('brandLogo').value).slice(0, 4);
+  saveData(); toast('Marca atualizada!');
+}
+function loadBrand() { const s = APP_DATA.settings; document.getElementById('brandLogo').value = s.logo || 'DT'; document.getElementById('brandSubtitle').value = s.brandSubtitle || ''; document.getElementById('brandDesc').value = s.brandDesc || ''; updateLogoPreview(); }
+
+// ---------- SOCIAL ----------
+function openSocialModal(id) {
+  document.getElementById('modalSocialTitle').textContent = id ? 'Editar Rede' : 'Nova Rede Social';
+  document.getElementById('socialId').value = id || '';
+  if (id) { const s = APP_DATA.socialLinks.find(x => x.id === id); if (s) { document.getElementById('socialPlatform').value = s.platform || 'other'; document.getElementById('socialName').value = s.name; document.getElementById('socialUrl').value = s.url; document.getElementById('socialIcon').value = s.icon || ''; } }
+  else { document.getElementById('socialPlatform').value = 'instagram'; ['socialName', 'socialUrl', 'socialIcon'].forEach(i => document.getElementById(i).value = ''); }
+  openModal('modalSocial');
+}
+function saveSocial() {
+  const name = sanitizeString(document.getElementById('socialName').value).trim();
+  const url = document.getElementById('socialUrl').value.trim();
+  if (!name || !url) { toast('Preencha nome e URL', 'error'); return; }
+  if (!/^https?:\/\//i.test(url)) { toast('URL deve começar com http(s)://', 'error'); return; }
+  const id = document.getElementById('socialId').value;
+  const data = { platform: document.getElementById('socialPlatform').value, name, url, icon: document.getElementById('socialIcon').value.trim().slice(0, 4) };
+  if (id) { const idx = APP_DATA.socialLinks.findIndex(x => x.id === id); if (idx > -1) APP_DATA.socialLinks[idx] = { ...APP_DATA.socialLinks[idx], ...data }; toast('Rede atualizada!'); }
+  else { data.id = genId(APP_DATA.socialLinks); APP_DATA.socialLinks.push(data); toast('Rede adicionada!'); }
+  saveData(); closeModal('modalSocial');
+}
+function deleteSocial(id) { if (!confirm('Excluir esta rede?')) return; APP_DATA.socialLinks = APP_DATA.socialLinks.filter(x => x.id !== id); saveData(); toast('Excluído', 'info'); }
+function renderSocial() {
+  const tbody = document.getElementById('socialTable');
+  if (!APP_DATA.socialLinks.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--cinza-tec);padding:40px">Nenhuma rede configurada</td></tr>'; return; }
+  const iconMap = { instagram: '📷', tiktok: '🎵', whatsapp: '💬', youtube: '▶️', twitter: '🐦', facebook: '👤', telegram: '✈️' };
+  tbody.innerHTML = APP_DATA.socialLinks.map((s, i) => `<tr><td style="font-size:1.3rem">${esc(s.icon || iconMap[s.platform] || '🔗')}</td><td><span class="badge ${i < 3 ? 'badge-on' : 'badge-info'}">${esc(s.platform)}${i < 3 ? ' ★' : ''}</span></td><td><strong>${esc(s.name)}</strong></td><td style="font-size:0.82rem;color:var(--cinza-tec);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.url)}</td><td class="table-actions"><button class="btn btn-secondary btn-sm btn-icon" onclick="openSocialModal(${s.id})">✏️</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteSocial(${s.id})">🗑️</button></td></tr>`).join('');
+}
+
+// ---------- SETTINGS ----------
+function saveSettings() { APP_DATA.settings.storeName = sanitizeString(document.getElementById('setStoreName').value) || 'Dtechmaster'; APP_DATA.settings.defaultTheme = document.getElementById('setTheme').value; saveData(); toast('Configurações salvas!'); }
+function loadSettings() { document.getElementById('setStoreName').value = APP_DATA.settings.storeName || ''; document.getElementById('setTheme').value = APP_DATA.settings.defaultTheme || 'light'; }
+
+// ---------- ALTERAR CREDENCIAIS ----------
+function buildCredPins() { buildPinRow('credPinRow'); buildPinRow('credNewPinRow'); }
+function changePassword() { document.getElementById('modalCredTitle').textContent = 'Alterar Senha'; document.getElementById('credMode').value = 'pass'; document.getElementById('credNewPassGroup').style.display = 'block'; document.getElementById('credNewPinGroup').style.display = 'none'; document.getElementById('credMsg').textContent = ''; document.getElementById('credCurrent').value = ''; clearPin('credPinRow'); buildCredPins(); openModal('modalCred'); }
+function changePin() { document.getElementById('modalCredTitle').textContent = 'Alterar Código de 7 Dígitos'; document.getElementById('credMode').value = 'pin'; document.getElementById('credNewPassGroup').style.display = 'none'; document.getElementById('credNewPinGroup').style.display = 'block'; document.getElementById('credMsg').textContent = ''; document.getElementById('credCurrent').value = ''; clearPin('credPinRow'); clearPin('credNewPinRow'); buildCredPins(); openModal('modalCred'); }
+async function doChangeCred() {
+  const auth = getAuth(); const mode = document.getElementById('credMode').value;
+  const msg = document.getElementById('credMsg'); msg.className = 'auth-msg';
+  const pass = document.getElementById('credCurrent').value;
+  const pin = readPin('credPinRow');
+  if (!pass || pin.length !== 7) { msg.textContent = 'Informe senha e código atuais.'; msg.classList.add('err'); return; }
+  try {
+    const hash = await hashPassword(pass, unb64(auth.salt));
+    if (hash !== auth.hash) throw new Error('badpass');
+    const key = await deriveKey(pin, unb64(auth.pinSalt));
+    const blob = JSON.parse(localStorage.getItem(DATA_KEY));
+    await decryptData(blob, key);
+    if (mode === 'pass') {
+      const np = document.getElementById('credNewPass').value;
+      if (np.length < 8) { msg.textContent = 'Nova senha: mínimo 8 caracteres.'; msg.classList.add('err'); return; }
+      const ns = randBytes(16);
+      auth.salt = b64(ns); auth.hash = await hashPassword(np, ns);
+      localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+      toast('Senha alterada!');
+    } else {
+      const npin = readPin('credNewPinRow');
+      if (npin.length !== 7) { msg.textContent = 'Novo código: 7 dígitos.'; msg.classList.add('err'); return; }
+      const nps = randBytes(16);
+      const nkey = await deriveKey(npin, nps);
+      const nblob = await encryptData(APP_DATA, nkey);
+      auth.pinSalt = b64(nps);
+      localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+      localStorage.setItem(DATA_KEY, JSON.stringify(nblob));
+      currentKey = nkey;
+      toast('Código alterado! Use o novo nos próximos acessos.');
+    }
+    closeModal('modalCred');
+  } catch (e) {
+    msg.textContent = e.message === 'badpass' ? 'Senha atual incorreta.' : 'Código atual incorreto.';
+    msg.classList.add('err');
+  }
+}
+
+// ---------- EXPORT/IMPORT ----------
+function exportData() {
+  const json = JSON.stringify(APP_DATA, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'dtechmaster_data_' + new Date().toISOString().split('T')[0] + '.json'; a.click();
+  URL.revokeObjectURL(url); toast('JSON exportado!');
+}
+function importData(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try { APP_DATA = sanitizeData(JSON.parse(e.target.result)); saveData(); toast('Dados importados e validados!'); }
+    catch { toast('Erro ao importar: arquivo inválido', 'error'); }
+  };
+  reader.readAsText(file); event.target.value = '';
+}
+function copyJSON() { navigator.clipboard.writeText(JSON.stringify(APP_DATA, null, 2)).then(() => toast('JSON copiado!')).catch(() => toast('Erro ao copiar', 'error')); }
+function resetData() { if (!confirm('⚠️ Apagar TODOS os dados do catálogo?')) return; if (!confirm('Tem certeza? Sua conta de acesso será mantida.')) return; APP_DATA = JSON.parse(JSON.stringify(DEFAULT_DATA)); saveData(); toast('Dados resetados', 'info'); }
+function syncNow() { localStorage.setItem('dm_sync_v1', Date.now().toString()); toast('✓ Sincronização enviada!'); }
+
+// ---------- DASHBOARD ----------
+function renderDashboard() {
+  document.getElementById('statProducts').textContent = APP_DATA.products.length;
+  document.getElementById('statFeatured').textContent = APP_DATA.products.filter(p => p.featured).length + ' em destaque';
+  document.getElementById('statBanners').textContent = APP_DATA.banners.length + '/3';
+  document.getElementById('statCats').textContent = APP_DATA.categories.length;
+  document.getElementById('statSubs').textContent = APP_DATA.categories.reduce((a, c) => a + (c.subcategories?.length || 0), 0) + ' subclasses';
+  document.getElementById('statSocial').textContent = APP_DATA.socialLinks.length;
+  document.getElementById('navCountProducts').textContent = APP_DATA.products.length;
+  document.getElementById('navCountBanners').textContent = APP_DATA.banners.length + '/3';
+  document.getElementById('navCountCats').textContent = APP_DATA.categories.length;
+  const recent = [...APP_DATA.products].sort((a, b) => (b.dateAdded || '').localeCompare(a.dateAdded || '')).slice(0, 5);
+  const tbody = document.getElementById('recentProducts');
+  if (!recent.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--cinza-tec);padding:30px">Nenhum produto ainda.</td></tr>'; }
+  else { tbody.innerHTML = recent.map(p => `<tr><td><img class="table-img" src="${esc(p.image)}" onerror="this.style.background='var(--input-bg)'"></td><td><strong>${esc(p.name)}</strong></td><td>${esc(p.category || '—')}</td><td><span class="badge ${p.featured ? 'badge-on' : 'badge-off'}">${p.featured ? 'Destaque' : 'Normal'}</span></td><td style="font-size:0.82rem;color:var(--cinza-tec)">${esc(p.dateAdded || '—')}</td></tr>`).join(''); }
+}
+function updateJsonPreview() { document.getElementById('jsonPreview').value = JSON.stringify(APP_DATA, null, 2); }
+function refreshAll() {
+  if (!APP_DATA) return;
+  renderDashboard(); renderProducts(); renderBanners(); renderCategories(); renderSocial(); loadSettings(); loadBrand(); updateJsonPreview();
+  document.getElementById('sidebarBrand').textContent = APP_DATA.settings.storeName || 'Dtechmaster';
+}
+
+// ---------- BOOT ----------
+(function init() {
+  document.getElementById('authShield').innerHTML = LOGO_SVG;
+  document.getElementById('sidebarLogo').innerHTML = LOGO_SVG;
+  window.LOGO_SVG = LOGO_SVG;
+  const auth = getAuth();
+  if (!auth) { showSetup(); }
+  else { showLogin(); }
+})();
+</script>
+</body>
+</html>
